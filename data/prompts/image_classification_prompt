@@ -1,0 +1,6 @@
+Please learn to classify these images of oranges from the following labeled training set images and then classify the unlabeled test set images.
+You will be shown a labeled training example  of each possible orange in the test set as training set images. 
+You will then be shown unlabeled test examples of the same oranges from the training set  in different environments, your job is to correctly guess which orange from the training set the orange is.  
+The answer format should first have the text 'Answers:' followed by the classification label of each test set orange  with answers separated by commas followed by a space on a single line.
+For the first answer, leave a space between the colon in 'Answers:' and the answer itself. 
+Then add an empty line and give an explanation for your answers in the format  'Reasoning: Your response'.
