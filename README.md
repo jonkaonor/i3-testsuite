@@ -1,6 +1,6 @@
 # i3-testsuite
 
-This repository contains a Python script and package for automating testing and logging of i3 framework / LLM experiments. The overall goals are speeding up LLM experimentation by simplifying prompt submission, automatically logging and scoring outputs, reducing transcription errors, and enabling quick switching between different LLM APIs via the `litellm` package. Currently the test suite supports image classification tasks for two basic LLM prompting modes, `baseline` and `context`. The test suite has been tested for functionality with the `gpt-4o` model of OpenAI. Extensions for additional LLM prompting modes, tasks, and LLM models are planned for the near future. 
+This repository contains a Python script and package for automating testing and logging of i3 framework / LLM experiments. The package goal is to speed up LLM experimentation by automating prompt submission to the LLM API through `litellm`, task scoring, and experiment results logging. Currently the test suite supports image classification tasks for two basic LLM prompting modes, `baseline` and `context`. The test suite has been tested for functionality with the `gpt-4o` model of OpenAI. Extensions to handle additional LLM prompting modes, tasks, and LLM models are planned for the near future. 
 
 ## Structure Overview
 ### Package Overview
@@ -50,8 +50,8 @@ Note: You must replace `sk-...` with your own API key and export will only set t
 - `model_name`: This is the name of the LLM model as specified by litellm.
 - `num_train_examples`: This is the number of training examples to be used per class.
 - `num_test_examples`: This is the number of test examples for the LLM to classify in total. 
-- `task_strategy`: This parameter specifies the current task. Currently `image_classification` is supported and `arcagi` support is pending.
-- `i3_strategy`: This parameter specifies the current i3 framework. Currently `baseline` (standard LLM task input prompt) and `context` (baseline + additional context / knowledge module) are supported. `multiquery` and `combined` options are pending. 
+- `task_strategy`: This parameter specifies the task. Currently `image_classification` is supported and `arcagi` support is pending.
+- `i3_strategy`: This parameter specifies the i3 framework, which is the LLM prompting strategy. Currently there are two modes: `baseline` which adds only basic task information to the LLM prompt from `data/prompts/image_classification` and `context` which adds both the basic task information from `basleine` and additional task knowledge from `data/prompts/context_prompt` to the LLM prompt. `multiquery` and `combined` options are pending. 
 
 ### General Task-Setup / Experimentation Procedure
 1. Set the configuration settings in `test_script.py` for the specific task.
@@ -61,7 +61,7 @@ Note: You must replace `sk-...` with your own API key and export will only set t
 5. Experiment results will be logged to `data/logs/experiment_log`.
 6. Repeat for further experiments.
 
-### Sample LLM Output
+### Sample Test Script Output
 <pre> ✅ API test succeeded. Response:
 Answers: A, B, A, B, A, B, B, A
 
