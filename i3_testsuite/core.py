@@ -27,8 +27,10 @@ class I3TestSuite:
                  model_name: str,
                  task_strategy: str,
                  i3_strategy: str,
+                 select_train_examples: str,
                  num_train_examples: int,
-                 num_test_examples: int):
+                 num_test_examples: int,
+                 max_output_tokens: int):
 
         """Initializes the test suite with the chosen model, task, and i3 strategy.
 
@@ -42,8 +44,10 @@ class I3TestSuite:
 
         self.base_data_path = base_data_path
         self.model_name = model_name
+        self.select_train_examples = select_train_examples
         self.num_train_examples = num_train_examples
         self.num_test_examples = num_test_examples 
+        self.max_output_tokens = max_output_tokens
 
         # Check that the specified base data directory exists 
         if not os.path.isdir(self.base_data_path):
@@ -58,7 +62,7 @@ class I3TestSuite:
         # Check that the task strategy string is valid and set the task strategy
         if task_strategy not in task_strategy_map:
             raise ValueError(f"Unsupported task_strategy: {task_strategy}")
-        self.task_strategy = task_strategy_map[task_strategy](self.base_data_path, self.num_train_examples, self.num_test_examples)
+        self.task_strategy = task_strategy_map[task_strategy](self.base_data_path, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
         # Define the i3 frameworks that are supported by the test suite
         i3_strategy_map = {
@@ -71,7 +75,7 @@ class I3TestSuite:
         # Check that the i3 strategy input is valid and set the i3 strategy 
         if i3_strategy not in i3_strategy_map:
             raise ValueError(f"Unsupported i3_strategy: {i3_strategy}")
-        self.i3_strategy = i3_strategy_map[i3_strategy](self.base_data_path)
+        self.i3_strategy = i3_strategy_map[i3_strategy](self.base_data_path, self.max_output_tokens)
 
         # Log the configuration settings to the log file 
         experiment_metadata = { 
@@ -79,6 +83,7 @@ class I3TestSuite:
             "task_strategy":      task_strategy,
             "i3_strategy":        i3_strategy,
             "model_name":         model_name,
+            "select_train_examples": select_train_examples,
             "num_train_examples": num_train_examples,
             "num_test_examples":  num_test_examples,
         }

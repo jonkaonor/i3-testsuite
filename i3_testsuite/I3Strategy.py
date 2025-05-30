@@ -9,8 +9,9 @@ class I3Strategy(ABC):
     Subclasses should implement the i3_prompt method to modify the prompt
     before sending it to the model.
     """
-    def __init__(self, base_data_path):
+    def __init__(self, base_data_path, max_output_tokens):
         self.base_data_path = base_data_path
+        self.max_output_tokens = max_output_tokens
 
     @abstractmethod
     def i3_prompt(self, litellm_prompt):
@@ -40,7 +41,8 @@ class I3Strategy(ABC):
                         "role": "user",
                         "content": litellm_prompt
                     }
-                ]
+                ],
+                max_completion_tokens = self.max_output_tokens
             )
             message = response['choices'][0]['message']['content']
             print(f"✅ API test succeeded. Response:\n{message}")

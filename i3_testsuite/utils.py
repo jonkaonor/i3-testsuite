@@ -57,12 +57,19 @@ def encode_image_to_base64_data_uri(path):
     return f"data:{mime_type};base64,{encoded_bytes}"
 
 
-def image_train_test_split(image_dict_arr, num_train_examples, num_test_examples):
-    """Splits image data into training and test sets by sampling from each class.
+def image_train_test_split(base_data_path, image_dict_arr, select_train_examples, num_train_examples, num_test_examples):
+    """Splits image data into training and test sets via either random or manual sampling.
 
+    In random sampling: 
     From each per-class dictionary of image paths, selects 'num_test_examples' training
     examples. Then selects test examples from the pool of remaining images randomly.
     Sampling is done without replacement (images are only added once to either set).
+
+    In manual sampling:
+    From the `select_train_examples.txt` file in the `images` directory, read in training 
+    images and create the training set. Then selects test examples from the pool of 
+    remaining images randomly. Sampling is done without replacement (images are only 
+    added once to either set).
 
     Args:
         image_dict_arr (list): List of dictionaries mapping image_path -> label.
@@ -75,32 +82,75 @@ def image_train_test_split(image_dict_arr, num_train_examples, num_test_examples
     Raises:
         ValueError: If there are not enough images in a class or overall for sampling.
     """
-    # Check that there are enough of each images for the number of training examples specified
-    total_images = 0
-    for dic in image_dict_arr:
-        total_images += len(dic)
-        if len(dic) < num_train_examples:
-            label = next(iter(dic.values()), "<unknown>")
-            raise ValueError(
-                f"Class '{label}' only has {total} examples, " +
-                f"but you requested {num_train_examples} examples for train"
-            )
-
-    # Check that there are enough images for the number of training / test examples specified
-    if total_images < num_train_examples * len(image_dict_arr) + num_test_examples :
-        raise ValueError(f"There are only {total_images} images which is insufficient for the number of train/test examples specified")
-
+    
+    # Creates the training set, either with manually selected images or randomly selected images
     train_set = []
     test_set  = []
 
-    # Randomly select a number of training examples from each class equal to num_train_examples and add them to the train_set
-    for d in image_dict_arr:
-        items = list(d.items())
-        train_samples = random.sample(items, num_train_examples)
-        train_set.extend(train_samples)
-        # remove selected examples from the dict
-        for path, _ in train_samples:
-            d.pop(path)
+    if select_train_examples == 'random':  
+        # Check that there are enough of each images for the number of training examples specified
+        total_images = 0
+        for dic in image_dict_arr:
+            total_images += len(dic)
+            if len(dic) < num_train_examples:
+                label = next(iter(dic.values()), "<unknown>")
+                raise ValueError(
+                    f"Class '{label}' only has {total} examples, " +
+                    f"but you requested {num_train_examples} examples for train"
+                )
+
+        # Check that there are enough images for the number of training / test examples specified
+        if total_images < num_train_examples * len(image_dict_arr) + num_test_examples :
+            raise ValueError(f"There are only {total_images} images which is insufficient for the number of train/test examples specified")
+
+        # Randomly select a number of training examples from each class equal to num_train_examples and add them to the train_set
+        for d in image_dict_arr:
+            items = list(d.items())
+            train_samples = random.sample(items, num_train_examples)
+            train_set.extend(train_samples)
+            # remove selected examples from the dict
+            for path, _ in train_samples:
+                d.pop(path)
+
+    elif select_train_examples == 'manual':
+        # Load the manually selected image file paths
+        list_file = os.path.join(base_data_path, 'images', 'training_images_list.txt')
+        if not os.path.isfile(list_file):
+            raise ValueError(f"Manual training list file not found at '{list_file}'")
+        with open(list_file, 'r') as f:
+            rel_paths = [ln.strip() for ln in f if ln.strip()]
+
+        # Add manually selected images to the training set 
+        required_labels = {next(iter(d.values())) for d in image_dict_arr}
+        seen_labels = set()
+        for rel in rel_paths:
+            abs_path = os.path.abspath(os.path.join(base_data_path, 'images', rel))
+            if not os.path.isfile(abs_path):
+                raise ValueError(f"Listed file '{rel}' does not exist.")
+            matched = False
+            for d in image_dict_arr:
+                if abs_path in d:
+                    label = d.pop(abs_path)
+                    train_set.append((abs_path, label))
+                    seen_labels.add(label)
+                    matched = True
+                    break
+            if not matched:
+                raise ValueError(f"File '{rel}' not found in class directories.")
+        missing = required_labels - seen_labels
+        if missing:
+            raise ValueError(f"Manual list missing images for classes: {missing}")
+
+        # After manual image selection, ensure there are enough images remaininng for the test set 
+        remaining = sum(len(d) for d in image_dict_arr)
+        if remaining < num_test_examples:
+            raise ValueError(f"After manual selection, only {remaining} images remain for {num_test_examples} tests.")
+
+    else:
+        # Case for invalid training example selection mode
+        raise ValueError(
+            f"Parameter select_train_examples must have value 'random' or 'manual', got '{select_train_examples}'"
+        )
 
     # Randomly select a number of test examples from each class equal to num_test_examples and add them to the test_set
     remaining_images_arr = []
