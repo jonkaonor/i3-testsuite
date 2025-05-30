@@ -13,8 +13,9 @@ class TaskStrategy(ABC):
     against a test set. Shared attributes include file paths and the number of training/test
     examples to use.
     """
-    def __init__(self, base_data_path, num_train_examples, num_test_examples):
+    def __init__(self, base_data_path, select_train_examples, num_train_examples, num_test_examples):
         self.base_data_path = base_data_path
+        self.select_train_examples = select_train_examples
         self.num_train_examples = num_train_examples
         self.num_test_examples = num_test_examples 
 
@@ -27,8 +28,8 @@ class TaskStrategy(ABC):
         pass
 
 class ImageClassificationStrategy(TaskStrategy):
-    def __init__(self, base_data_path, num_train_examples, num_test_examples):
-        super().__init__(base_data_path, num_train_examples, num_test_examples)
+    def __init__(self, base_data_path, select_train_examples, num_train_examples, num_test_examples):
+        super().__init__(base_data_path, select_train_examples, num_train_examples, num_test_examples)
         self.train_set = []
         self.test_set = []
 
@@ -47,7 +48,7 @@ class ImageClassificationStrategy(TaskStrategy):
         image_dict_arr = load_images_as_dict_arr(self.base_data_path)
 
         # Create a training set and test set from the 'images' directory
-        self.train_set, self.test_set = image_train_test_split(image_dict_arr, self.num_train_examples, self.num_test_examples)
+        self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
         # Load the task_prompt from file 
         task_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_prompt")

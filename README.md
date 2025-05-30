@@ -48,14 +48,16 @@ Note: You must replace `sk-...` with your own API key and export will only set t
 ### Configuration Settings 
 - `base_data_path`: This is the path to the directory containing the `images`, `prompts` and `logs` folders.
 - `model_name`: This is the name of the LLM model as specified by litellm.
-- `num_train_examples`: This is the number of training examples to be used per class.
+- `select_train_examples`: This parameter sets the method for selecting training examples and can be `random` or `manual`. When using the `manual` selection mode, relative file paths to the training images should be written to the `training_images_list.txt` file in the `data/images` directory. You must specify at least one training example for every possible image class. 
+- `num_train_examples`: This is the number of training examples to be used per class.  This parameter is only used for `random` selection of training examples and is ignored for `manual` selection.
+- `max_output_tokens`: This parameter specifies the maximum number of output tokens used in the LLM response. If set too low, LLM behavior becomes unpredictable and generally poor. 
 - `num_test_examples`: This is the number of test examples for the LLM to classify in total. 
 - `task_strategy`: This parameter specifies the task. Currently `image_classification` is supported and `arcagi` support is pending.
-- `i3_strategy`: This parameter specifies the i3 framework, which is the LLM prompting strategy. Currently there are two modes: `baseline` which adds only basic task information to the LLM prompt from `data/prompts/image_classification` and `context` which adds both the basic task information from `basleine` and additional task knowledge from `data/prompts/context_prompt` to the LLM prompt. `multiquery` and `combined` options are pending. 
+- `i3_strategy`: This parameter specifies the i3 framework, which is the LLM prompting strategy. Currently there are two modes: `baseline` which adds only basic task information to the LLM prompt from `data/prompts/image_classification` and `context` which adds both the basic task information from `baseline` and additional task knowledge from `data/prompts/context_prompt` to the LLM prompt. `multiquery` and `combined` options are pending. 
 
-### General Task-Setup / Experimentation Procedure
-1. Set the configuration settings in `test_script.py` for the specific task.
-2. Place the images you wish to classify in the `data/images` directory. Each image should be placed in a directory with the class label as the directory name. For example, in the oranges dataset images are either labeled A or B so there are two directories in `images`. 
+### General Task-Setup / Experimentation Procedure for Image Classification Tasks
+1. Set the configuration settings in `test_script.py` for the specific task. 
+2. Place the images you wish to classify in the `data/images` directory. Each image should be placed in a directory with the class label as the directory name. For example, in the oranges dataset images are either labeled A or B so there are two directories in `images`. Set the method for selecting training images via the `select_train_examples` input parameter. 
 3. Modify the prompts in the `data/prompts` directory, changing the text in `context_prompt` and `image_classification_prompt`. These are added at the beginning of the prompt sent to the LLM. 
 4. Run the test script by executing the command `python test_script.py` or `python3 test_script.py`. There will be a pause while the request is processed followed by the LLM output being shown along with the score. 
 5. Experiment results will be logged to `data/logs/experiment_log`.
