@@ -38,6 +38,14 @@ class I3Strategy(ABC):
                 model=model_name,
                 messages=[
                     {
+                        "role": "system",
+                        "content": """You are a virtual assistant tasked with solving a problem 
+                        after being shown some training examples of how to solve the problem. You 
+                        should always output your response in the specified output format and you 
+                        should always attempt to solve the task problem. 
+                        """
+                    },
+                    {
                         "role": "user",
                         "content": litellm_prompt
                     }
