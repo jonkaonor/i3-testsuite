@@ -1,3 +1,6 @@
+# Ignore log archive directory
+data/logs/log_archive
+
 # Ignore virtual environment
 venv/
 
