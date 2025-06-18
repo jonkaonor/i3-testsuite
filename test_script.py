@@ -9,7 +9,7 @@ bot = i3_testsuite.I3TestSuite(
     num_test_examples = 8,
     max_output_tokens = 5000,
     task_strategy="image_classification",
-    i3_strategy="context"
+    prompt_design_strategy="basic_with_context"
 )
 
 bot.execute_test()

@@ -3,8 +3,8 @@ import os
 import litellm
 from i3_testsuite.utils import log_kv_pairs
 
-class I3Strategy(ABC):
-    """Abstract base class for I3 framework strategies.
+class PromptDesignStrategy(ABC):
+    """Abstract base class for prompt design strategies.
 
     Subclasses should implement the i3_prompt method to modify the prompt
     before sending it to the model.
@@ -59,14 +59,14 @@ class I3Strategy(ABC):
 
         return response 
 
-class BaselineStrategy(I3Strategy):
+class BasicStrategy(PromptDesignStrategy):
     """Strategy that uses the input prompt without modification."""
 
     def i3_prompt(self, litellm_prompt):
         # Return the original prompt since the baseline strategy is to add no context
         return litellm_prompt
 
-class ContextDocumentStrategy(I3Strategy):
+class BasicWithContextStrategy(PromptDesignStrategy):
     """Strategy that injects a knowledge module / context document into the prompt."""
     def i3_prompt(self, litellm_prompt):
         # Load the context prompt / knowledge module from file 
@@ -83,20 +83,10 @@ class ContextDocumentStrategy(I3Strategy):
 
         return litellm_prompt
 
-class MultiQueryStrategy(I3Strategy):
+class I3Strategy(PromptDesignStrategy):
     """Strategy for executing multiple LLM queries per input prompt."""
     def i3_prompt(self, litellm_prompt):
         pass
 
     def execute_api_calls(self, model_name, litellm_prompt): 
         pass
-
-class CombinedStrategy(I3Strategy):
-    """Strategy that combines the context document and multiquery strategies."""
-    def i3_prompt(self, litellm_prompt):
-        pass
-
-    def execute_api_calls(self, model_name, litellm_prompt): 
-        pass
-
-        
