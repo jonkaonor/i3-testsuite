@@ -1,45 +1,46 @@
 import os
 from datetime import datetime
 from i3_testsuite.TaskStrategy import ImageClassificationStrategy, ARCStrategy  
-from i3_testsuite.I3Strategy import BaselineStrategy, ContextDocumentStrategy, MultiQueryStrategy, CombinedStrategy 
+from i3_testsuite.PromptDesignStrategy import BasicStrategy, BasicWithContextStrategy, I3Strategy
 from i3_testsuite.utils import log_kv_pairs, log_delimiter
 
 class I3TestSuite:
-    """Runs a full test cycle of the i3 / LLM framework for a specific task  
+    """Class implements functionality for testing how various LLMs and prompt design approaches 
+    perform on ML tasks. 
 
 
     This class accepts configuration settings, sets up the testing environment, 
-    initializes task and i3-specific logic, builds prompts, sends them to the model, 
-    scores the results, and logs configuration settings, prompts, and task results. 
-    It supports multiple types of task strategies (like image classification) and i3
-    framework strategies (like context or multiquery).
+    initializes task and prompt design-specific logic, builds prompts, sends them to the model 
+    via the LLM API, scores the results, and logs configuration settings, prompts, and task results. 
+    It supports multiple types of task strategies (like image classification) and prompt design strategies 
+    (like basic, basic with context, or i3).
 
     Attributes:
         base_data_path (str): Path to the base directory containing prompt and image data.
         model_name (str): Name of the LLM model to be used.
         task_strategy (TaskStrategy): The task logic to apply, such as classification or ARC.
-        i3_strategy (I3Strategy): The i3 logic / strategy to apply, such as baseline or context.
-        num_train_examples (int): Number of training examples per class to include in the prompt.
+        prompt_design_strategy (PromptDesignStrategy): The prompt design to apply, such as basic or i3.
+        num_train_examples (int): Number of training examples per class to include in the prompt. 
         num_test_examples (int): Number of test examples to include in the prompt, used in scoring.
     """
     def __init__(self,
                  base_data_path: str,
                  model_name: str,
                  task_strategy: str,
-                 i3_strategy: str,
+                 prompt_design_strategy: str,
                  select_train_examples: str,
                  num_train_examples: int,
                  num_test_examples: int,
                  max_output_tokens: int):
 
-        """Initializes the test suite with the chosen model, task, and i3 strategy.
+        """Initializes the test suite with the chosen model, task, and prompt design strategy.
 
         Verifies that the base data directory exists and that the specified task
-        and i3 strategies are valid. Logs the experimental configuration.
+        and prompt design strategies are valid. Logs the experimental configuration.
 
         Raises:
             FileNotFoundError: If the base data directory does not exist.
-            ValueError: If the task or i3 strategy names are invalid.
+            ValueError: If the task or prompt design strategy names are invalid.
         """
 
         self.base_data_path = base_data_path
@@ -64,24 +65,23 @@ class I3TestSuite:
             raise ValueError(f"Unsupported task_strategy: {task_strategy}")
         self.task_strategy = task_strategy_map[task_strategy](self.base_data_path, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
-        # Define the i3 frameworks that are supported by the test suite
-        i3_strategy_map = {
-            "baseline": BaselineStrategy,
-            "context": ContextDocumentStrategy,
-            "multiquery": MultiQueryStrategy,
-            "combined": CombinedStrategy
+        # Define the prompt modes that are supported by the test suite
+        prompt_design_strategy_map = {
+            "basic": BasicStrategy,
+            "basic_with_context": BasicWithContextStrategy,
+            "i3": I3Strategy,
         }
 
-        # Check that the i3 strategy input is valid and set the i3 strategy 
-        if i3_strategy not in i3_strategy_map:
-            raise ValueError(f"Unsupported i3_strategy: {i3_strategy}")
-        self.i3_strategy = i3_strategy_map[i3_strategy](self.base_data_path, self.max_output_tokens)
+        # Check that the prompt mode input is valid and set the prompt mode 
+        if prompt_design_strategy not in prompt_design_strategy_map:
+            raise ValueError(f"Unsupported prompt_design_strategy: {prompt_design_strategy}")
+        self.prompt_design_strategy = prompt_design_strategy_map[prompt_design_strategy](self.base_data_path, self.max_output_tokens)
 
         # Log the configuration settings to the log file 
         experiment_metadata = { 
             "Date/Time" : datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "task_strategy":      task_strategy,
-            "i3_strategy":        i3_strategy,
+            "prompt_design_strategy": prompt_design_strategy,
             "model_name":         model_name,
             "select_train_examples": select_train_examples,
             "num_train_examples": num_train_examples,
@@ -95,7 +95,7 @@ class I3TestSuite:
 
         This includes:
             - Generating a prompt using the task strategy.
-            - Enhancing the prompt using the i3 strategy (e.g., context, multiquery).
+            - Enhancing the prompt using the prompt design strategy (e.g., basic, i3).
             - Sending the prompt to the LLM via the litellm API.
             - Scoring the LLM's output and logging results.
             - Logs the LLM response, total token usage, and final score.
@@ -104,10 +104,10 @@ class I3TestSuite:
         litellm_prompt = self.task_strategy.task_prompt()
 
         # Add additional context if applicable to the prompt 
-        litellm_prompt = self.i3_strategy.i3_prompt(litellm_prompt)
+        litellm_prompt = self.prompt_design_strategy.i3_prompt(litellm_prompt)
 
         # Send the prompt to the specified LLM model via the litellm API for processing 
-        response = self.i3_strategy.execute_api_calls(self.model_name, litellm_prompt)
+        response = self.prompt_design_strategy.execute_api_calls(self.model_name, litellm_prompt)
 
         # Calculate the score of the llm, log the scores, and print the score to console
         score = self.task_strategy.llm_task_score(response)
@@ -116,5 +116,4 @@ class I3TestSuite:
         # Log the llm input and response
         log_kv_pairs(self.base_data_path, {"Total Tokens Used": response.get("usage", {}).get("total_tokens"),"Model Response": response['choices'][0]['message']['content']})
         log_delimiter(self.base_data_path)
-
 
