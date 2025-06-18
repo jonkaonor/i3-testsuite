@@ -9,8 +9,9 @@ class PromptDesignStrategy(ABC):
     Subclasses should implement the i3_prompt method to modify the prompt
     before sending it to the model.
     """
-    def __init__(self, base_data_path, max_output_tokens):
+    def __init__(self, base_data_path, task_strategy, max_output_tokens):
         self.base_data_path = base_data_path
+        self.task_strategy = task_strategy
         self.max_output_tokens = max_output_tokens
 
     @abstractmethod
