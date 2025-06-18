@@ -75,7 +75,7 @@ class I3TestSuite:
         # Check that the prompt mode input is valid and set the prompt mode 
         if prompt_design_strategy not in prompt_design_strategy_map:
             raise ValueError(f"Unsupported prompt_design_strategy: {prompt_design_strategy}")
-        self.prompt_design_strategy = prompt_design_strategy_map[prompt_design_strategy](self.base_data_path, self.max_output_tokens)
+        self.prompt_design_strategy = prompt_design_strategy_map[prompt_design_strategy](self.base_data_path, self.task_strategy, self.max_output_tokens)
 
         # Log the configuration settings to the log file 
         experiment_metadata = { 
