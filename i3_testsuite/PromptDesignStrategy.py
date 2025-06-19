@@ -14,10 +14,6 @@ class PromptDesignStrategy(ABC):
         self.task_strategy = task_strategy
         self.max_output_tokens = max_output_tokens
 
-    @abstractmethod
-    def i3_prompt(self, litellm_prompt):
-        pass
-
     def execute_api_calls(self, model_name, litellm_prompt): 
         """Calls the LiteLLM API with the given model and prompt and returns the response.
 
@@ -62,32 +58,12 @@ class PromptDesignStrategy(ABC):
 
 class BasicStrategy(PromptDesignStrategy):
     """Strategy that uses the input prompt without modification."""
-
-    def i3_prompt(self, litellm_prompt):
-        # Return the original prompt since the baseline strategy is to add no context
-        return litellm_prompt
-
+    pass
 class BasicWithContextStrategy(PromptDesignStrategy):
     """Strategy that injects a knowledge module / context document into the prompt."""
-    def i3_prompt(self, litellm_prompt):
-        # Load the context prompt / knowledge module from file 
-        context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "context_prompt")
-
-        with open(context_prompt_file_path, "r", encoding="utf-8") as f:
-            context_prompt_text = f.read()
-
-        # Add the context prompt after the initial task prompt but before the training / test examples 
-        litellm_prompt.insert(1, {"type": "text", "text": context_prompt_text})
-
-        # Log the context prompt used in the log file
-        log_kv_pairs(self.base_data_path, {"Input Context Text": context_prompt_text})
-
-        return litellm_prompt
+    pass
 
 class I3Strategy(PromptDesignStrategy):
     """Strategy for executing multiple LLM queries per input prompt."""
-    def i3_prompt(self, litellm_prompt):
-        pass
-
     def execute_api_calls(self, model_name, litellm_prompt): 
         pass

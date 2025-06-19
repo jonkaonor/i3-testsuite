@@ -23,6 +23,22 @@ class TaskStrategy(ABC):
     def task_prompt(self):
         pass
 
+    @abstractmethod 
+    def basic_prompt(self):
+        pass
+
+    @abstractmethod
+    def basic_with_context_prompt(self):
+        pass
+
+    @abstractmethod
+    def i3_training_prompt(self):
+        pass
+    
+    @abstractmethod
+    def i3_testing_prompt(self):
+        pass
+
     @abstractmethod
     def llm_task_score(self, response):
         pass
@@ -33,16 +49,17 @@ class ImageClassificationStrategy(TaskStrategy):
         self.train_set = []
         self.test_set = []
 
-    def task_prompt(self):
-        """
-        Loads the task images and the task prompt from the 'images' and 'prompts' folders 
-        in the base data directory. Creates a structured prompt suitable for the litellm 
-        API / OpenAI ChatCompletions API.
+    def basic_prompt(self):
+        """ Creates a LLM prompt for the image classification task.
+        
+        This function creates a structured prompt suitable for use with 
+        the litellm API / OpenAI ChatCompletions API that prompts the LLM 
+        to classify the images in the test set using the labelled images
+        in the training set. 
 
         Return:
             list: A list of dictionaries representing the structured prompt to send to the 
             model. Each dictionary is either a text instruction or an image in base64 format.
-    
         """
         # Create an array of image dictionaries, one per image class label 
         image_dict_arr = load_images_as_dict_arr(self.base_data_path)
@@ -50,47 +67,304 @@ class ImageClassificationStrategy(TaskStrategy):
         # Create a training set and test set from the 'images' directory
         self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
+        # Load the system prompt from file
+        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt")
+
+        with open(system_prompt_file_path, "r", encoding="utf-8") as f:
+            system_prompt_text = f.read()
+
+        # Log the system prompt used in the log file
+        log_kv_pairs(self.base_data_path, {"System Prompt Text": system_prompt_text})
+        
         # Load the task_prompt from file 
         task_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_prompt")
 
         with open(task_prompt_file_path, "r", encoding="utf-8") as f:
             task_prompt_text = f.read()
 
-        # Create the initial litellm message prompt and add the task prompt to it 
-        litellm_prompt = [
-            {"type": "text", "text": task_prompt_text},
-        ]
-
-        # Add the training images to the prompt
-        for image_path, label in self.train_set:
-            litellm_prompt.append({
-                "type": "text",
-                "text": f"The following image is a training image whose label is: {label}. Please use this to help you in differentiating between the different images"
-            })
-            litellm_prompt.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": encode_image_to_base64_data_uri(image_path)
-                }
-            })
-
-        # Add the test images to the prompt
-        for image_path, label in self.test_set:
-            litellm_prompt.append({
-                "type": "text",
-                "text": "The following image is a test image. Please predict it's classification and include it's classification in your output as part of 'Answers:'"
-            })
-            litellm_prompt.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": encode_image_to_base64_data_uri(image_path)
-                }
-            })
-
         # Log the task prompt 
         log_kv_pairs(self.base_data_path, {"Task Input Text": task_prompt_text})
 
-        return litellm_prompt
+        # Create the initial messages array and add the task prompt as a system message
+        overall_llm_prompt = [
+                    {
+                        "role": "system",
+                        "content": system_prompt_text
+                    },
+                    {
+                        "role": "system",
+                        "content": task_prompt_text
+                    }]
+
+        # Create a user message containing the training and test data 
+        user_message = []
+        # Add the training images to the user message 
+        for image_path, label in self.train_set:
+            user_message.append({
+                "type": "text",
+                "text": f"The following image is a training image whose label is: {label}. Please use this to help you in differentiating between the different classe of images"
+            })
+            user_message.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": encode_image_to_base64_data_uri(image_path)
+                }
+            })
+
+        # Add the test images to the user message 
+        for image_path, label in self.test_set:
+            user_message.append({
+                "type": "text",
+                "text": "The following image is a test image. Please predict it's classification and include it's classification in your output as part of 'Answers:'"
+            })
+            user_message.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": encode_image_to_base64_data_uri(image_path)
+                }
+            })
+
+        # Add the user message containing the images containing images to the array of prompt messages 
+        overall_llm_prompt.append({
+            "role": "user",
+            "content": user_message
+        })
+
+        return overall_llm_prompt
+
+    def basic_with_context_prompt(self):
+        """ Adds context to the LLM prompt for the image classification task
+        
+        This function adds additional context to the llm prompt generated 
+        by the basic_prompt method. 
+
+        Return:
+            list: A list of dictionaries representing the structured prompt to send to the 
+            model. Each dictionary is either a text instruction or an image in base64 format.
+        """
+        # Load the context prompt / knowledge module from file 
+        context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "context_prompt")
+
+        with open(context_prompt_file_path, "r", encoding="utf-8") as f:
+            context_prompt_text = f.read()
+
+        # Log the context prompt used in the log file
+        log_kv_pairs(self.base_data_path, {"Input Context Text": context_prompt_text})
+
+        # Create the basic prompt and add the context to the prompt
+        overall_llm_prompt = self.basic_prompt()
+        overall_llm_prompt[2].front({
+            "type": "text",
+            "text": context_prompt_text
+        })
+
+        return overall_llm_prompt
+        
+    def i3_train_prompt(self):
+        """ Creates a LLM prompt for the i3 training phase of the task.
+        
+        This function creates a structured prompt suitable for the litellm API 
+        / OpenAI ChatCompletions API that prompts the LLM to create classification
+        prompt based on the images in the training set. This prompt design is based
+        on the i3 concept and prompts the LLM to generate a classification prompt 
+        which is used by the i3_test_prompt method to classify the test set images.  
+
+        Return:
+            list: A list of dictionaries representing the structured prompt to send to the 
+            model. Each dictionary is either a text instruction or an image in base64 format.
+        """
+        # Create an array of image dictionaries, one per image class label 
+        image_dict_arr = load_images_as_dict_arr(self.base_data_path)
+
+        # Create a training set and test set from the 'images' directory
+        self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
+
+        # Load the system prompt from file
+        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt")
+
+        with open(system_prompt_file_path, "r", encoding="utf-8") as f:
+            system_prompt_text = f.read()
+
+        # Log the system prompt used in the log file
+        log_kv_pairs(self.base_data_path, {"System Prompt Text": system_prompt_text})
+        
+        # Load the i3 training prompt from file 
+        train_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_image_classification_train_prompt")
+
+        with open(train_prompt_file_path, "r", encoding="utf-8") as f:
+            train_prompt_text = f.read()
+
+        # Log the task prompt 
+        log_kv_pairs(self.base_data_path, {"Train Prompt Text": train_prompt_text})
+
+        # Create the initial messages array and add the task prompt as a system message
+        overall_llm_prompt = [
+                    {
+                        "role": "system",
+                        "content": system_prompt_text
+                    },
+                    {
+                        "role": "system",
+                        "content": train_prompt_text
+                    }]
+
+        # Create a user message containing the training and test data 
+        user_message = []
+        # Add the training images to the user message 
+        for image_path, label in self.train_set:
+            user_message.append({
+                "type": "text",
+                "text": f"The following image is a training image whose label is: {label}. Please use this to help you in differentiating between the different classes of images"
+            })
+            user_message.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": encode_image_to_base64_data_uri(image_path)
+                }
+            })
+
+        # Add the user message containing the images to the array of prompt messages 
+        overall_llm_prompt.append({
+            "role": "user",
+            "content": user_message
+        })
+
+        # Load the context prompt / knowledge module from file 
+        i3_context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_context_prompt")
+
+        with open(i3_context_prompt_file_path, "r", encoding="utf-8") as f:
+            i3_context_prompt_text = f.read().strip()
+
+        # Only proceed if the file is not empty
+        if i3_context_prompt_text:
+            # Log the context prompt used in the log file
+            log_kv_pairs(self.base_data_path, {"i3 Context Text": i3_context_prompt_text})
+
+            # Create the basic prompt and add the context to the prompt
+            overall_llm_prompt[2].front({
+                "type": "text",
+                "text": context_prompt_text
+            })
+
+        return overall_llm_prompt
+    
+    def i3_testing_prompt(self):
+        """ Creates a LLM prompt for the i3 testing phase of the task.
+        
+        This function creates a structured prompt suitable for the litellm API 
+        / OpenAI ChatCompletions API that prompts the LLM to classify the images
+        in the test set using the classification prompt and possibly an additional 
+        context prompt. This prompt design is based on the i3 concept and utilizes
+        the classification prompt generated by the LLM in the i3 training phase.
+
+        Return:
+            list: A list of dictionaries representing the structured prompt to send to the 
+            model. Each dictionary is either a text instruction or an image in base64 format.
+        """
+        # Create an array of image dictionaries, one per image class label 
+        image_dict_arr = load_images_as_dict_arr(self.base_data_path)
+
+        # Create a training set and test set from the 'images' directory
+        self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
+
+        # Load the system prompt from file
+        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt")
+
+        with open(system_prompt_file_path, "r", encoding="utf-8") as f:
+            system_prompt_text = f.read()
+
+        # Log the system prompt used in the log file
+        log_kv_pairs(self.base_data_path, {"System Prompt Text": system_prompt_text})
+        
+        # Load the i3 testing prompt from file 
+        i3_test_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_image_classification_test_prompt")
+
+        with open(test_prompt_file_path, "r", encoding="utf-8") as f:
+            test_prompt_text = f.read()
+
+        # Log the task prompt 
+        log_kv_pairs(self.base_data_path, {"Test Prompt Text": test_prompt_text})
+
+        # Create the initial messages array and add the task prompt as a system message
+        overall_llm_prompt = [
+                    {
+                        "role": "system",
+                        "content": system_prompt_text
+                    },
+                    {
+                        "role": "system",
+                        "content": test_prompt_text
+                    }]
+
+        # Create a user message containing the training and test data 
+        user_message = []
+        # Add the training images to the user message 
+        for image_path, label in self.train_set:
+            user_message.append({
+                "type": "text",
+                "text": f"The following image is a training image whose label is: {label}. Please use this to help you in differentiating between the different classes of images"
+            })
+            user_message.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": encode_image_to_base64_data_uri(image_path)
+                }
+            })
+
+        # Add the test images to the user message 
+        for image_path, label in self.test_set:
+            user_message.append({
+                "type": "text",
+                "text": "The following image is a test image. Please predict it's classification and include it's classification in your output as part of 'Answers:'"
+            })
+            user_message.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": encode_image_to_base64_data_uri(image_path)
+                }
+            })
+
+        # Add the user message containing the images to the array of prompt messages 
+        overall_llm_prompt.append({
+            "role": "user",
+            "content": user_message
+        })
+
+        # Load the context prompt / knowledge module from file 
+        i3_context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_context_prompt")
+
+        with open(i3_context_prompt_file_path, "r", encoding="utf-8") as f:
+            i3_context_prompt_text = f.read().strip()
+
+        # Only proceed if the file is not empty
+        if i3_context_prompt_text:
+            # Log the context prompt used in the log file
+            log_kv_pairs(self.base_data_path, {"i3 Context Text": i3_context_prompt_text})
+
+            # Create the basic prompt and add the context to the prompt
+            overall_llm_prompt[2].front({
+                "type": "text",
+                "text": context_prompt_text
+            })
+
+        # Load the classification prompt from file 
+        i3_classification_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_classification_prompt")
+
+        with open(i3_classification_prompt_file_path, "r", encoding="utf-8") as f:
+            i3_classification_prompt_text = f.read().strip()
+
+        # Only proceed if the file is not empty
+        if i3_classification_prompt_text:
+            # Log the context prompt used in the log file
+            log_kv_pairs(self.base_data_path, {"i3 Classification Prompt Text": i3_classification_prompt_text})
+
+            # Create the basic prompt and add the context to the prompt
+            overall_llm_prompt[2].front({
+                "type": "text",
+                "text": i3_classification_prompt_text
+            })
+
+        return overall_llm_prompt
 
     def llm_task_score(self, response):
         """Scores predictions from an LLM response against a test set.
@@ -170,6 +444,18 @@ class ARCStrategy(TaskStrategy):
     Reasoning Corpus) tasks in the future. Currently not implemented.
     """
     def task_prompt(self):
+        pass
+
+    def basic_prompt(self):
+        pass
+
+    def basic_with_context_prompt(self):
+        pass
+
+    def i3_training_prompt(self):
+        pass
+
+    def i3_testing_prompt(self):
         pass
 
     def llm_task_score(self, response):
