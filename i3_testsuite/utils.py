@@ -19,7 +19,7 @@ def log_kv_pairs(base_data_path: str, kv_dict: dict):
         for key, value in kv_dict.items():
             f.write(f"{key}: {value}\n")
 
-        f.write("\n")
+        #f.write("\n")
 
 
 def log_delimiter(base_data_path: str, delimiter: str = "-"*150):

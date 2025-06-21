@@ -1,10 +1,13 @@
-Date/Time: 2025-06-18 16:02:25
+Date/Time: 2025-06-21 09:26:50
 task_strategy: image_classification
 prompt_design_strategy: basic_with_context
 model_name: gpt-4o
 select_train_examples: random
 num_train_examples: 1
 num_test_examples: 8
+Prompt Type: Train and Test
+System Prompt Text: You are a virtual assistant tasked with solving a problem after being shown some training examples of how to solve the problem. You should 
+always output your response in the specified output format and you should always attempt to solve the task problem.
 
 Task Input Text: Please learn to classify these images of oranges from the following labeled training set images and then classify the unlabeled test set images.
 You will be shown a labeled training example  of each possible orange in the test set as training set images. 
@@ -12,198 +15,123 @@ You will then be shown unlabeled test examples of the same oranges from the trai
 The answer format should first have the text 'Answers:' followed by the classification label of each test set orange  with answers separated by commas followed by a space on a single line.
 For the first answer, leave a space between the colon in 'Answers:' and the answer itself. 
 Then add an empty line and give an explanation for your answers in the format  'Reasoning: Your response'.
-
 
 Input Context Text: Focus on the shape and length of the stem to help in classifying the images of the oranges. The 'A' orange has a green stem that has a longer length than the 'B' orange.
 You can classify the orange as 'A' if the stem is green colored and you can classify the orange 'B' if they have more black in their stem.
 Alternatively, you can clasisfy the orange as 'A' if it has a clearly protruding stem while you can classify the orange 'B' if the stem is very flat and not protruding.
-
-
-score: 6
-
-ba0656dc.jpg: (B, B)
-
-3aa8703e.jpg: (A, A)
-
-f5a4466d.jpg: (A, A)
-
-a1b9295a.jpg: (B, A)
-
-bd3cc77a.jpg: (B, A)
-
-7f59b5d1.jpg: (A, A)
-
-3a107821.jpg: (A, A)
-
-64f95493.jpg: (B, B)
-
-Total Tokens Used: 3349
-Model Response: Answers: B, A, A, A, A, A, A, B
-
-Reasoning: The main differentiating features between the oranges are the color and protrusion of the stem. 
-- Test 1 has a more blackish, flat stem similar to training image B, so it is classified as B.
-- Test 2 has a green, protruding stem, characteristic of orange A.
-- Test 3 has a green, visibly protruding stem, matching orange A.
-- Test 4 also shows a green, protruding stem, indicating it as orange A.
-- Test 5 has a green, extending stem, classifying it as A.
-- Test 6 presents a green, larger protruding stem characteristic of A.
-- Test 7 features a less protruding stem with more dark color similar to B, hinting at an 'A', but the black part is more visibly dominant.
-- Test 8 has a blackish, flat stem similar to orange B.
-
-------------------------------------------------------------------------------------------------------------------------------------------------------
-Date/Time: 2025-06-18 16:04:54
-task_strategy: image_classification
-prompt_design_strategy: basic
-model_name: gpt-4o
-select_train_examples: random
-num_train_examples: 1
-num_test_examples: 8
-
-Task Input Text: Please learn to classify these images of oranges from the following labeled training set images and then classify the unlabeled test set images.
-You will be shown a labeled training example  of each possible orange in the test set as training set images. 
-You will then be shown unlabeled test examples of the same oranges from the training set  in different environments, your job is to correctly guess which orange from the training set the orange is.  
-The answer format should first have the text 'Answers:' followed by the classification label of each test set orange  with answers separated by commas followed by a space on a single line.
-For the first answer, leave a space between the colon in 'Answers:' and the answer itself. 
-Then add an empty line and give an explanation for your answers in the format  'Reasoning: Your response'.
-
-
-score: 3
-
-a1b9295a.jpg: (B, B)
-
-64f95493.jpg: (B, A)
-
-47b29a2a.jpg: (B, A)
-
-3a4e806a.jpg: (B, A)
-
-b3ae74bd.jpg: (B, A)
-
-831ce1da.jpg: (A, B)
-
-d9002a40.jpg: (A, A)
-
-497b5398.jpg: (A, A)
-
-Total Tokens Used: 3271
-Model Response: Answers: B, A, A, A, A, B, A, A
-
-Reasoning: The classification is based on the distinct surface texture, background, and lighting observed in the images. 
-
-1. **Test Image 1:** The texture and appearance closely match the characteristics of training image B, with similar lighting and subtle features of the skin.
-2. **Test Image 2:** The dark environment and texture are consistent with training image A, which is similar to the setting of the test image.
-3. **Test Image 3:** This image shares the bright environment and smoother texture visible in training image A.
-4. **Test Image 4:** The wood-patterned surface resembles the environment of training image A.
-5. **Test Image 5:** Although the background lighting is different, the skin texture is similar to training image A.
-6. **Test Image 6:** The carpeted texture and lighting closely match training image B.
-7. **Test Image 7:** The smooth surface and lighting environment are consistent with training image A.
-8. **Test Image 8:** The varied lighting in the image is more similar to the characteristics of training image A.
-
-------------------------------------------------------------------------------------------------------------------------------------------------------
-Date/Time: 2025-06-18 16:42:47
-task_strategy: image_classification
-prompt_design_strategy: basic_with_context
-model_name: gpt-4o
-select_train_examples: random
-num_train_examples: 1
-num_test_examples: 8
-
-Task Input Text: Please learn to classify these images of oranges from the following labeled training set images and then classify the unlabeled test set images.
-You will be shown a labeled training example  of each possible orange in the test set as training set images. 
-You will then be shown unlabeled test examples of the same oranges from the training set  in different environments, your job is to correctly guess which orange from the training set the orange is.  
-The answer format should first have the text 'Answers:' followed by the classification label of each test set orange  with answers separated by commas followed by a space on a single line.
-For the first answer, leave a space between the colon in 'Answers:' and the answer itself. 
-Then add an empty line and give an explanation for your answers in the format  'Reasoning: Your response'.
-
-
-Input Context Text: Focus on the shape and length of the stem to help in classifying the images of the oranges. The 'A' orange has a green stem that has a longer length than the 'B' orange.
-You can classify the orange as 'A' if the stem is green colored and you can classify the orange 'B' if they have more black in their stem.
-Alternatively, you can clasisfy the orange as 'A' if it has a clearly protruding stem while you can classify the orange 'B' if the stem is very flat and not protruding.
-
 
 score: 8
+03c6219a.jpg: (A, A)
+7874ff20.jpg: (A, A)
+d11496bf.jpg: (A, A)
+497b5398.jpg: (A, A)
+d8659b98.jpg: (B, B)
+2a558bbd.jpg: (A, A)
+3a4e806a.jpg: (B, B)
+19616b42.jpg: (A, A)
+Total Tokens Used: 3337
+Model Response: Answers: A, A, A, A, B, A, B, A
 
-ea8ab656.jpg: (A, A)
-
-cd500ab5.jpg: (B, B)
-
-3a107821.jpg: (A, A)
-
-d9002a40.jpg: (A, A)
-
-47b29a2a.jpg: (B, B)
-
-7f59b5d1.jpg: (A, A)
-
-255bc1f6.jpg: (B, B)
-
-a1b9295a.jpg: (B, B)
-
-Total Tokens Used: 3346
-Model Response: Answers: A, B, A, A, B, A, B, B
-
-Reasoning: The classification is based on the characteristics of the stem as described:
-
-1. **First image**: The stem is green and has a clear, long protrusion, resembling orange A.
-2. **Second image**: The stem is flat and not protruding, similar to orange B.
-3. **Third image**: The stem is green with a noticeable protrusion, matching orange A.
-4. **Fourth image**: The stem is green and protruding, indicating orange A.
-5. **Fifth image**: The stem is flat and dark, similar to orange B.
-6. **Sixth image**: The stem is green and protrudes, like orange A.
-7. **Seventh image**: The stem is flat, consistent with orange B.
-8. **Eighth image**: The stem appears flat and more black, similar to orange B.
-
+Reasoning: 
+1. The first test image has a green and clearly protruding stem, indicating it belongs to class 'A'.
+2. The second test image also shows a green, more protruding stem, classifying it as 'A'.
+3. The third test image features a green stem that protrudes, thus it's 'A'.
+4. The fourth test image displays a green stem, which is more extended, indicating 'A'.
+5. The fifth test image has a flat, darker stem, consistent with class 'B'.
+6. The sixth test image shows a longer, protruding green stem, indicating 'A'.
+7. The seventh test image has a darker and less protruding stem, suggesting it belongs to class 'B'.
+8. The eighth test image has a green and protruding stem, indicating it is 'A'.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-Date/Time: 2025-06-18 17:24:53
+Date/Time: 2025-06-21 09:27:29
 task_strategy: image_classification
-prompt_design_strategy: basic_with_context
+prompt_design_strategy: i3
 model_name: gpt-4o
 select_train_examples: random
 num_train_examples: 1
 num_test_examples: 8
+Prompt Type: Train
+System Prompt Text: You are a virtual assistant tasked with solving a problem after being shown some training examples of how to solve the problem. You should 
+always output your response in the specified output format and you should always attempt to solve the task problem.
 
-Task Input Text: Please learn to classify these images of oranges from the following labeled training set images and then classify the unlabeled test set images.
-You will be shown a labeled training example  of each possible orange in the test set as training set images. 
-You will then be shown unlabeled test examples of the same oranges from the training set  in different environments, your job is to correctly guess which orange from the training set the orange is.  
-The answer format should first have the text 'Answers:' followed by the classification label of each test set orange  with answers separated by commas followed by a space on a single line.
-For the first answer, leave a space between the colon in 'Answers:' and the answer itself. 
-Then add an empty line and give an explanation for your answers in the format  'Reasoning: Your response'.
+Train Prompt Text: # Instructions 
 
+*Please use the following labeled images from the training set to create an in-depth textual description of the images in general and the  distinguishing differences between the different classes of images.
+*This textual description is a 'classification prompt' that will be used to aid a LLM in classifying unlabeled test images later.  
+*The format of your answer should begin with the string 'Classification Prompt:' followed the textual description of the class differences.
 
-Input Context Text: Focus on the shape and length of the stem to help in classifying the images of the oranges. The 'A' orange has a green stem that has a longer length than the 'B' orange.
-You can classify the orange as 'A' if the stem is green colored and you can classify the orange 'B' if they have more black in their stem.
-Alternatively, you can clasisfy the orange as 'A' if it has a clearly protruding stem while you can classify the orange 'B' if the stem is very flat and not protruding.
+i3 Context Text: *Focus only on characteristics of the orange for the purposes of generating the classification prompt and for distinguishing between the image classifications.
+*Do not focus on the background, lighting or other environmental factor.
+Total Tokens Used: 924
+Model Response: Classification Prompt:
 
+Class A Oranges:
+- The oranges exhibit a vibrant and uniform orange hue.
+- They have a particularly glossy surface appearance with noticeable shine or highlights, reflecting light prominently.
+- The texture is smooth but clearly shows a fine, detailed dimple pattern on the peel.
+- The stem area is more recessed, with a small, visible green stem.
 
-score: 6
+Class B Oranges: 
+- These oranges display a deep orange color with subtle variations in shading across the surface.
+- The surface is less shiny and has a matte appearance, reflecting less light compared to Class A.
+- The texture is slightly rougher with a broader and less distinct dimple pattern.
+- The stem area appears slightly protruding and the stem may not be as visibly pronounced. 
 
-831ce1da.jpg: (A, A)
+Use these characteristics to differentiate between Class A and Class B images when classifying new images.
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Date/Time: 2025-06-21 09:27:29
+task_strategy: image_classification
+prompt_design_strategy: i3
+model_name: gpt-4o
+select_train_examples: random
+num_train_examples: 1
+num_test_examples: 8
+Prompt Type: Test
+System Prompt Text: You are a virtual assistant tasked with solving a problem after being shown some training examples of how to solve the problem. You should 
+always output your response in the specified output format and you should always attempt to solve the task problem.
 
-64f95493.jpg: (B, A)
+Test Prompt Text: # Instructions
 
+* Please classify the following unlabeled test set images by utilizing the distinguishing information in the classification prompt and the labeled training images.
+* You will be shown labeled training examples of each possible class of image in the test set as training images.
+* You will then be shown unlabeled test examples of the same classes of images in different environments.
+* Your job is to correctly guess the class of image for each unlabeled test example.
+* Your answers should be in the following format. First the string 'Answers:' should appear followed by your predicted classification label for each test set image. Your predicted classifications should be separated by commas followed by a space. All predicted classification answers should be on a single line. After this line, add an empty line and give an explanation for your predicted classifications following the string 'Reasoning: Your reasoning'.
+* For the first answer, leave a space between the colon in 'Answers:' and the first predicted class.
+
+i3 Context Text: *Focus only on characteristics of the orange for the purposes of generating the classification prompt and for distinguishing between the image classifications.
+*Do not focus on the background, lighting or other environmental factor.
+i3 Classification Prompt Text: Class A Oranges:
+- The oranges exhibit a vibrant and uniform orange hue.
+- They have a particularly glossy surface appearance with noticeable shine or highlights, reflecting light prominently.
+- The texture is smooth but clearly shows a fine, detailed dimple pattern on the peel.
+- The stem area is more recessed, with a small, visible green stem.
+
+Class B Oranges: 
+- These oranges display a deep orange color with subtle variations in shading across the surface.
+- The surface is less shiny and has a matte appearance, reflecting less light compared to Class A.
+- The texture is slightly rougher with a broader and less distinct dimple pattern.
+- The stem area appears slightly protruding and the stem may not be as visibly pronounced. 
+
+Use these characteristics to differentiate between Class A and Class B images when classifying new images.
+score: 7
+cd500ab5.jpg: (B, B)
+3cbe0b2d.jpg: (B, A)
 3aa8703e.jpg: (A, A)
-
-f8e67b66.jpg: (A, B)
-
-ba0656dc.jpg: (B, B)
-
-bd3cc77a.jpg: (B, B)
-
-47b29a2a.jpg: (B, B)
-
-19616b42.jpg: (A, A)
-
-Total Tokens Used: 3342
-Model Response: Answers: A, A, A, B, B, B, B, A
+60280065.jpg: (B, B)
+2a558bbd.jpg: (A, A)
+7f59b5d1.jpg: (A, A)
+3a4e806a.jpg: (B, B)
+3a107821.jpg: (A, A)
+Total Tokens Used: 3460
+Model Response: Answers: B, A, A, B, A, A, B, A
 
 Reasoning: 
-1. Test Image 1: The stem is green and protruding, similar to training image A, so it is classified as A.
-2. Test Image 2: The stem is green and more prominent, indicating it is similar to A.
-3. Test Image 3: The green and sizable protruding stem suggests it is A.
-4. Test Image 4: The stem is flat and contains more black, similar to training image B.
-5. Test Image 5: The stem is flat with visible black, indicating classification as B.
-6. Test Image 6: The stem appears flat with dark coloration, suggesting B.
-7. Test Image 7: The stem has more black and is non-protruding, resembling B.
-8. Test Image 8: The stem is green and clearly protruding, indicating it is A.
-
+1. The first test orange has a matte texture and less distinct dimples, resembling Class B.
+2. The second test orange is shiny with clear dimples and a recessed stem, matching Class A.
+3. The third test orange has a glossy appearance with a fine dimple pattern and a small stem, indicative of Class A.
+4. The fourth test orange has a matte surface and subtle shading, which fits Class B characteristics.
+5. The fifth test orange is glossy with a small, prominent stem and clear texture detail, indicating Class A.
+6. The sixth test orange is similarly shiny with detailed dimples and a recessed stem area, typical of Class A.
+7. The seventh test orange has a matte appearance and less distinct texture, characteristic of Class B.
+8. The eighth test orange is shiny with clear texture and a small, visible stem, which is consistent with Class A.
 ------------------------------------------------------------------------------------------------------------------------------------------------------

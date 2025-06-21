@@ -8,7 +8,6 @@ class I3TestSuite:
     """Class implements functionality for testing how various LLMs and prompt design approaches 
     perform on ML tasks. 
 
-
     This class accepts configuration settings, sets up the testing environment, 
     initializes task and prompt design-specific logic, builds prompts, sends them to the model 
     via the LLM API, scores the results, and logs configuration settings, prompts, and task results. 
@@ -16,12 +15,14 @@ class I3TestSuite:
     (like basic, basic with context, or i3).
 
     Attributes:
-        base_data_path (str): Path to the base directory containing prompt and image data.
+        base_data_path (str): Path to the base directory containing prompts, logs and task data.
         model_name (str): Name of the LLM model to be used.
         task_strategy (TaskStrategy): The task logic to apply, such as classification or ARC.
         prompt_design_strategy (PromptDesignStrategy): The prompt design to apply, such as basic or i3.
+        select_train_examples (str): How to select training examples, options are 'random' and 'manual'
         num_train_examples (int): Number of training examples per class to include in the prompt. 
         num_test_examples (int): Number of test examples to include in the prompt, used in scoring.
+        max_output_tokens (int): Parameter that specifies a limit on how many tokens will be used for LLM output
     """
     def __init__(self,
                  base_data_path: str,
@@ -36,7 +37,7 @@ class I3TestSuite:
         """Initializes the test suite with the chosen model, task, and prompt design strategy.
 
         Verifies that the base data directory exists and that the specified task
-        and prompt design strategies are valid. Logs the experimental configuration.
+        and prompt design strategies are valid. 
 
         Raises:
             FileNotFoundError: If the base data directory does not exist.
@@ -72,13 +73,8 @@ class I3TestSuite:
             "i3": I3Strategy,
         }
 
-        # Check that the prompt mode input is valid and set the prompt mode 
-        if prompt_design_strategy not in prompt_design_strategy_map:
-            raise ValueError(f"Unsupported prompt_design_strategy: {prompt_design_strategy}")
-        self.prompt_design_strategy = prompt_design_strategy_map[prompt_design_strategy](self.base_data_path, self.task_strategy, self.max_output_tokens)
-
-        # Log the configuration settings to the log file 
-        experiment_metadata = { 
+        # Store the configuration settings for logging 
+        self.experiment_metadata = { 
             "Date/Time" : datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "task_strategy":      task_strategy,
             "prompt_design_strategy": prompt_design_strategy,
@@ -88,32 +84,19 @@ class I3TestSuite:
             "num_test_examples":  num_test_examples,
         }
 
-        log_kv_pairs(self.base_data_path, experiment_metadata)
+        # Check that the prompt mode input is valid and set the prompt mode 
+        if prompt_design_strategy not in prompt_design_strategy_map:
+            raise ValueError(f"Unsupported prompt_design_strategy: {prompt_design_strategy}")
+        self.prompt_design_strategy = prompt_design_strategy_map[prompt_design_strategy](self.base_data_path, self.task_strategy, self.num_test_examples, self.max_output_tokens, self.experiment_metadata)
 
     def execute_test(self): 
-        """Runs the main test pipeline for the selected task and strategy.
+        """Executes task testing using the specified prompt design strategy. 
 
-        This includes:
-            - Generating a prompt using the task strategy.
-            - Enhancing the prompt using the prompt design strategy (e.g., basic, i3).
-            - Sending the prompt to the LLM via the litellm API.
-            - Scoring the LLM's output and logging results.
-            - Logs the LLM response, total token usage, and final score.
+        Runs an interactive loop based on the prompting approach specified by
+        the prompt design strategy. Essentially runs task training and task 
+        testing by generating prompts and sending them to the LLM via an API 
+        call. The LLM's responses are then scored and logged along with the
+        test configuration settings.  
         """
-        # Generate initial llm prompt with train/test examples and task prompt
-        litellm_prompt = self.task_strategy.task_prompt()
-
-        # Add additional context if applicable to the prompt 
-        litellm_prompt = self.prompt_design_strategy.i3_prompt(litellm_prompt)
-
-        # Send the prompt to the specified LLM model via the litellm API for processing 
-        response = self.prompt_design_strategy.execute_api_calls(self.model_name, litellm_prompt)
-
-        # Calculate the score of the llm, log the scores, and print the score to console
-        score = self.task_strategy.llm_task_score(response)
-        print(f"Overall score is {score} out of {self.num_test_examples} test examples")
-
-        # Log the llm input and response
-        log_kv_pairs(self.base_data_path, {"Total Tokens Used": response.get("usage", {}).get("total_tokens"),"Model Response": response['choices'][0]['message']['content']})
-        log_delimiter(self.base_data_path)
-
+        # Execute an interactive loop for task training and testing
+        self.prompt_design_strategy.execute_api_calls(self.model_name)

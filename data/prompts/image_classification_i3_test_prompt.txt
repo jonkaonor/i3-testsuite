@@ -1,0 +1,8 @@
+# Instructions
+
+* Please classify the following unlabeled test set images by utilizing the distinguishing information in the classification prompt and the labeled training images.
+* You will be shown labeled training examples of each possible class of image in the test set as training images.
+* You will then be shown unlabeled test examples of the same classes of images in different environments.
+* Your job is to correctly guess the class of image for each unlabeled test example.
+* Your answers should be in the following format. First the string 'Answers:' should appear followed by your predicted classification label for each test set image. Your predicted classifications should be separated by commas followed by a space. All predicted classification answers should be on a single line. After this line, add an empty line and give an explanation for your predicted classifications following the string 'Reasoning: Your reasoning'.
+* For the first answer, leave a space between the colon in 'Answers:' and the first predicted class.

@@ -1,0 +1,5 @@
+# Instructions 
+
+*Please use the following labeled images from the training set to create an in-depth textual description of the images in general and the  distinguishing differences between the different classes of images.
+*This textual description is a 'classification prompt' that will be used to aid a LLM in classifying unlabeled test images later.  
+*The format of your answer should begin with the string 'Classification Prompt:' followed the textual description of the class differences.
