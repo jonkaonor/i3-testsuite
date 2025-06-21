@@ -19,10 +19,6 @@ class TaskStrategy(ABC):
         self.num_train_examples = num_train_examples
         self.num_test_examples = num_test_examples 
 
-    @abstractmethod
-    def task_prompt(self):
-        pass
-
     @abstractmethod 
     def basic_prompt(self):
         pass
@@ -32,12 +28,29 @@ class TaskStrategy(ABC):
         pass
 
     @abstractmethod
-    def i3_training_prompt(self):
+    def i3_train_prompt(self):
         pass
     
     @abstractmethod
-    def i3_testing_prompt(self):
+    def i3_test_prompt(self):
         pass
+
+    def i3_classification_prompt_parser(self, response):
+        prefix = "Classification Prompt:"
+            
+        if prefix in response:
+            # Extract the text after the prefix
+            classification_prompt_text = response.split(prefix, 1)[1].strip()
+            
+            # Construct the output file path
+            output_path = os.path.join(self.base_data_path, "prompts", "i3_classification_prompt.txt")
+            
+            # Write the prompt text to the file
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(classification_prompt_text)
+
+        else:
+            print("No classification prompt found in the response.")
 
     @abstractmethod
     def llm_task_score(self, response):
@@ -68,7 +81,7 @@ class ImageClassificationStrategy(TaskStrategy):
         self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
         # Load the system prompt from file
-        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt")
+        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt.txt")
 
         with open(system_prompt_file_path, "r", encoding="utf-8") as f:
             system_prompt_text = f.read()
@@ -77,7 +90,7 @@ class ImageClassificationStrategy(TaskStrategy):
         log_kv_pairs(self.base_data_path, {"System Prompt Text": system_prompt_text})
         
         # Load the task_prompt from file 
-        task_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_prompt")
+        task_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_prompt.txt")
 
         with open(task_prompt_file_path, "r", encoding="utf-8") as f:
             task_prompt_text = f.read()
@@ -143,20 +156,21 @@ class ImageClassificationStrategy(TaskStrategy):
             model. Each dictionary is either a text instruction or an image in base64 format.
         """
         # Load the context prompt / knowledge module from file 
-        context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "context_prompt")
+        context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "context_prompt.txt")
 
         with open(context_prompt_file_path, "r", encoding="utf-8") as f:
             context_prompt_text = f.read()
 
+        # Create the basic prompt, do logging and add the context to the prompt
+        overall_llm_prompt = self.basic_prompt()
+        overall_llm_prompt[2]["content"].insert(0, {
+            "type": "text",
+            "text": context_prompt_text,
+        })
+
         # Log the context prompt used in the log file
         log_kv_pairs(self.base_data_path, {"Input Context Text": context_prompt_text})
 
-        # Create the basic prompt and add the context to the prompt
-        overall_llm_prompt = self.basic_prompt()
-        overall_llm_prompt[2].front({
-            "type": "text",
-            "text": context_prompt_text
-        })
 
         return overall_llm_prompt
         
@@ -180,7 +194,7 @@ class ImageClassificationStrategy(TaskStrategy):
         self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
         # Load the system prompt from file
-        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt")
+        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt.txt")
 
         with open(system_prompt_file_path, "r", encoding="utf-8") as f:
             system_prompt_text = f.read()
@@ -189,7 +203,7 @@ class ImageClassificationStrategy(TaskStrategy):
         log_kv_pairs(self.base_data_path, {"System Prompt Text": system_prompt_text})
         
         # Load the i3 training prompt from file 
-        train_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_image_classification_train_prompt")
+        train_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_i3_train_prompt.txt")
 
         with open(train_prompt_file_path, "r", encoding="utf-8") as f:
             train_prompt_text = f.read()
@@ -230,7 +244,7 @@ class ImageClassificationStrategy(TaskStrategy):
         })
 
         # Load the context prompt / knowledge module from file 
-        i3_context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_context_prompt")
+        i3_context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_context_prompt.txt")
 
         with open(i3_context_prompt_file_path, "r", encoding="utf-8") as f:
             i3_context_prompt_text = f.read().strip()
@@ -241,14 +255,14 @@ class ImageClassificationStrategy(TaskStrategy):
             log_kv_pairs(self.base_data_path, {"i3 Context Text": i3_context_prompt_text})
 
             # Create the basic prompt and add the context to the prompt
-            overall_llm_prompt[2].front({
+            overall_llm_prompt[2]["content"].insert(0, {
                 "type": "text",
-                "text": context_prompt_text
+                "text": i3_context_prompt_text
             })
 
         return overall_llm_prompt
     
-    def i3_testing_prompt(self):
+    def i3_test_prompt(self):
         """ Creates a LLM prompt for the i3 testing phase of the task.
         
         This function creates a structured prompt suitable for the litellm API 
@@ -268,7 +282,7 @@ class ImageClassificationStrategy(TaskStrategy):
         self.train_set, self.test_set = image_train_test_split(self.base_data_path, image_dict_arr, self.select_train_examples, self.num_train_examples, self.num_test_examples)
 
         # Load the system prompt from file
-        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt")
+        system_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_system_prompt.txt")
 
         with open(system_prompt_file_path, "r", encoding="utf-8") as f:
             system_prompt_text = f.read()
@@ -277,13 +291,13 @@ class ImageClassificationStrategy(TaskStrategy):
         log_kv_pairs(self.base_data_path, {"System Prompt Text": system_prompt_text})
         
         # Load the i3 testing prompt from file 
-        i3_test_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_image_classification_test_prompt")
+        i3_test_prompt_file_path = os.path.join(self.base_data_path, "prompts", "image_classification_i3_test_prompt.txt")
 
-        with open(test_prompt_file_path, "r", encoding="utf-8") as f:
-            test_prompt_text = f.read()
+        with open(i3_test_prompt_file_path, "r", encoding="utf-8") as f:
+            i3_test_prompt_text = f.read()
 
         # Log the task prompt 
-        log_kv_pairs(self.base_data_path, {"Test Prompt Text": test_prompt_text})
+        log_kv_pairs(self.base_data_path, {"Test Prompt Text": i3_test_prompt_text})
 
         # Create the initial messages array and add the task prompt as a system message
         overall_llm_prompt = [
@@ -293,7 +307,7 @@ class ImageClassificationStrategy(TaskStrategy):
                     },
                     {
                         "role": "system",
-                        "content": test_prompt_text
+                        "content": i3_test_prompt_text
                     }]
 
         # Create a user message containing the training and test data 
@@ -331,7 +345,7 @@ class ImageClassificationStrategy(TaskStrategy):
         })
 
         # Load the context prompt / knowledge module from file 
-        i3_context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_context_prompt")
+        i3_context_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_context_prompt.txt")
 
         with open(i3_context_prompt_file_path, "r", encoding="utf-8") as f:
             i3_context_prompt_text = f.read().strip()
@@ -342,13 +356,13 @@ class ImageClassificationStrategy(TaskStrategy):
             log_kv_pairs(self.base_data_path, {"i3 Context Text": i3_context_prompt_text})
 
             # Create the basic prompt and add the context to the prompt
-            overall_llm_prompt[2].front({
+            overall_llm_prompt[2]["content"].insert(0, {
                 "type": "text",
-                "text": context_prompt_text
+                "text": i3_context_prompt_text
             })
 
         # Load the classification prompt from file 
-        i3_classification_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_classification_prompt")
+        i3_classification_prompt_file_path = os.path.join(self.base_data_path, "prompts", "i3_classification_prompt.txt")
 
         with open(i3_classification_prompt_file_path, "r", encoding="utf-8") as f:
             i3_classification_prompt_text = f.read().strip()
@@ -359,7 +373,7 @@ class ImageClassificationStrategy(TaskStrategy):
             log_kv_pairs(self.base_data_path, {"i3 Classification Prompt Text": i3_classification_prompt_text})
 
             # Create the basic prompt and add the context to the prompt
-            overall_llm_prompt[2].front({
+            overall_llm_prompt[2]["content"].insert(0, {
                 "type": "text",
                 "text": i3_classification_prompt_text
             })

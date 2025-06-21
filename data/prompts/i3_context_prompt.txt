@@ -1,0 +1,2 @@
+*Focus only on characteristics of the orange for the purposes of generating the classification prompt and for distinguishing between the image classifications.
+*Do not focus on the background, lighting or other environmental factor.
