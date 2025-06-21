@@ -1,23 +1,22 @@
 # i3-testsuite
 
-This repository contains a Python script and package for automating testing and logging of i3 framework / LLM experiments. The package goal is to speed up LLM experimentation by automating prompt submission to the LLM API through `litellm`, task scoring, and experiment results logging. Currently the test suite supports image classification tasks for two basic LLM prompting modes, `baseline` and `context`. The test suite has been tested for functionality with the `gpt-4o` model of OpenAI. Extensions to handle additional LLM prompting modes, tasks, and LLM models are planned for the near future. 
+This repository contains a Python script and package for automating testing of LLM performance on various ML tasks using different prompt designs and approaches. The package goal is to speed up LLM experimentation by automating the following steps: prompt submission to the LLM API through `litellm`, task scoring, and experiment results logging. Currently the test suite supports image classification tasks for three LLM prompting approaches, `basic` and `basic_with_context`, and `i3`, which are described in more detail below. The test suite has been tested for functionality with the `gpt-4o` OpenAI model. Extensions to handle additional LLM prompting approaches, tasks, and LLM models are planned for the near future. Currently the default prompts and images stored in the `data` folder and the `test_script.py` and log files are configured for image classification of oranges. This can be used as a model example for familiarization with the test suite. 
 
 ## Structure Overview
 ### Package Overview
-- `core.py` - The primary class is `I3TestSuite` which takes a task-specific input prompt and training / test data and converts it into the format specified by the OpenAI ChatCompletions API. The class then makes an API call to the specified LLM via the `litellm` package and logs the results to a log file.  
-- `TaskStrategy.py` and `I3Strategy.py` - These modules contain classes that support the `I3TestSuite` class by varying the behavior of certain functions depending on the current task or i3 framework.
+- `core.py` - The primary class is `I3TestSuite` which takes several user-defined prompts and training / test data and converts it into a LLM prompt in the format specified by the OpenAI ChatCompletions API. The class then makes an API call to the specified LLM via the `litellm` package and logs the experiment results to a log file.  
+- `TaskStrategy.py` and `PromptDesignStrategy.py` - These modules contain classes that support the `I3TestSuite` class by varying the behavior of certain functions depending on the current task or prompting approach.
 - `utils.py` - This module contains general utility functions. 
 
 ### Directory Overview
-| Folder/File      | Description                             |
-| ---------------- | --------------------------------------- |
-| `data/`          | Contains task data, prompts, and logs   |
-| `data/images/`   | Stores image files grouped by label     |
-| `data/prompts/`  | Contains task input prompts for the LLM |
-| `data/logs/`     | Directory where logs are saved          |
-| `i3-testsuite/`  | Core Python package code                |
-| `test_script.py` | Example usage script                    |
-
+| Folder/File      | Description                              |
+| ---------------- | -----------------------------------------|
+| `data/`          | Contains task data, prompts, and logs    |
+| `data/images/`   | Stores image files grouped by label      |
+| `data/prompts/`  | Contains user-defined prompts for the LLM|
+| `data/logs/`     | Directory where logs are saved           |
+| `i3-testsuite/`  | Core Python package code                 |
+| `test_script.py` | Example usage script                     |
 
 ## Requirements
 - Python 3.8+
@@ -53,13 +52,13 @@ Note: You must replace `sk-...` with your own API key and export will only set t
 - `max_output_tokens`: This parameter specifies the maximum number of output tokens used in the LLM response. If set too low, LLM behavior becomes unpredictable and generally poor. 
 - `num_test_examples`: This is the number of test examples for the LLM to classify in total. 
 - `task_strategy`: This parameter specifies the task. Currently `image_classification` is supported and `arcagi` support is pending.
-- `i3_strategy`: This parameter specifies the i3 framework, which is the LLM prompting strategy. Currently there are two modes: `baseline` which adds only basic task information to the LLM prompt from `data/prompts/image_classification` and `context` which adds both the basic task information from `baseline` and additional task knowledge from `data/prompts/context_prompt` to the LLM prompt. `multiquery` and `combined` options are pending. 
+- `prompt_design_strategy`: This parameter specifies the prompt design / prompting approach, which controls how the LLM is prompted. Currently there are three supported approaches: `basic` which adds only basic task instructions to the LLM prompt from `data/prompts/image_classification.txt` and `basic_with_context` which combines the final prompt generated by the `basic` approach and additional user-defined knowledge from `data/prompts/context_prompt.txt` to the LLM prompt. The `i3` approach splits training and testing into separate phases. In the training phase, `image_classification_i3_train_prompt.txt` is used to give task instructions and the user-defined `i3_context_prompt.txt` adds task-specific context to the prompt the LLM to generate a classifiation prompt that is stored in `image_classification_prompt.txt`. In the test phase, the classification prompt is utilized along with the `i3_context_prompt.txt` to perform the specified task on a test set. In all approaches a general system prompt for orienting the LLM to its purpose is added from `image_classification_system_prompt.txt`
 
 ### General Task-Setup / Experimentation Procedure for Image Classification Tasks
 1. Set the configuration settings in `test_script.py` for the specific task. 
-2. Place the images you wish to classify in the `data/images` directory. Each image should be placed in a directory with the class label as the directory name. For example, in the oranges dataset images are either labeled A or B so there are two directories in `images`. Set the method for selecting training images via the `select_train_examples` input parameter. 
-3. Modify the prompts in the `data/prompts` directory, changing the text in `context_prompt` and `image_classification_prompt`. These are added at the beginning of the prompt sent to the LLM. 
-4. Run the test script by executing the command `python test_script.py` or `python3 test_script.py`. There will be a pause while the request is processed followed by the LLM output being shown along with the score. 
+2. Place the images you wish to classify in the `data/images` directory. Each image should be placed in a directory with the class label as the directory name. For example, in the oranges dataset images are either labeled A or B so there are two directories in `images`. Set the method for selecting training images via the `select_train_examples` input parameter. Refer to the `Configuration Settings` section if using `manual` selection of training images. 
+3. Modify the relevant prompts in the `data/prompts` directory depending on your chosen `prompt_design_strategy`. Refer to the `Configuration Settings` part of the README for specifics of the functionality of each prompt. 
+4. Run the test script by executing the command `python test_script.py` or `python3 test_script.py`. An simple interactive loop will prompt you for input and allow you to run experiments. 
 5. Experiment results will be logged to `data/logs/experiment_log`.
 6. Repeat for further experiments.
 

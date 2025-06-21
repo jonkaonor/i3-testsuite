@@ -1,13 +1,13 @@
-Class A Oranges:
-- The oranges exhibit a vibrant and uniform orange hue.
-- They have a particularly glossy surface appearance with noticeable shine or highlights, reflecting light prominently.
-- The texture is smooth but clearly shows a fine, detailed dimple pattern on the peel.
-- The stem area is more recessed, with a small, visible green stem.
+To differentiate between the classes of images based on the characteristics of the oranges, consider the following features:
 
-Class B Oranges: 
-- These oranges display a deep orange color with subtle variations in shading across the surface.
-- The surface is less shiny and has a matte appearance, reflecting less light compared to Class A.
-- The texture is slightly rougher with a broader and less distinct dimple pattern.
-- The stem area appears slightly protruding and the stem may not be as visibly pronounced. 
+1. **Label A:**
+   - **Texture:** The texture of the orange peel is notably textured, with a moderate amount of shine, suggesting a natural light reflection on a slightly rough surface.
+   - **Color:** The orange displays a consistent vibrant orange hue across its surface.
+   - **Stem Presence:** The stem area appears slightly recessed and is not prominently visible.
 
-Use these characteristics to differentiate between Class A and Class B images when classifying new images.
+2. **Label B:**
+   - **Texture:** The texture of this orange appears more smooth compared to Label A, with a slightly glossy finish that indicates a smoother peel.
+   - **Color:** The color of this orange is similar to Label A, with a consistent orange tone, but it might have marginally less saturation due to lighting.
+   - **Stem Presence:** The stem is more prominently visible and slightly elevated, contrasting with the rest of the surface.
+
+By focusing on these distinctions, such as the texture smoothness and stem prominence, one can effectively classify images of oranges into the respective classes.
